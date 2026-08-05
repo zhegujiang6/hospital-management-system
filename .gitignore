@@ -1,0 +1,28 @@
+# IntelliJ IDEA / editors
+.idea/
+**/.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Java / Maven build output
+**/target/
+*.class
+
+# Node / Vite build output
+**/node_modules/
+**/dist/
+**/coverage/
+*.log
+
+# Local configuration and secrets
+**/.env
+**/.env.*
+!**/.env.example
+hospital-server/src/main/resources/application.yml
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
