@@ -8,8 +8,10 @@ import com.example.enums.PaymentStatus;
 import com.example.enums.RegistrationOrderStatus;
 import com.example.exception.BusinessException;
 import com.example.mapper.PaymentOrderMapper;
+import com.example.mq.message.PaymentSuccessMessage;
 import com.example.service.PaymentOrderService;
 import com.example.service.RegistrationOrderService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,14 +37,22 @@ public class PaymentOrderServiceImpl
     private final RegistrationOrderService
             registrationOrderService;
 
+
+    // 用于发布Spring项目内部事件
+    private final ApplicationEventPublisher
+            applicationEventPublisher;
+
+
     // Spring 创建本类时，会把 RegistrationOrderService 的实现对象传进来。
     public PaymentOrderServiceImpl(
-            RegistrationOrderService
-                    registrationOrderService) {
+            RegistrationOrderService registrationOrderService,
+            ApplicationEventPublisher applicationEventPublisher) {
 
-        // 保存挂号服务，后面的 create 和 mockSuccess 方法都会使用它。
         this.registrationOrderService =
                 registrationOrderService;
+
+        this.applicationEventPublisher =
+                applicationEventPublisher;
     }
 
     // 对应 PaymentOrderService 中的 create，用来为挂号订单创建支付单。
@@ -288,6 +298,42 @@ public class PaymentOrderServiceImpl
             // 抛出异常后，前面 markPaid 对挂号订单的修改也会被事务回滚。
             throw new BusinessException("支付单更新失败");
         }
+
+        // 创建一条支付成功消息
+        PaymentSuccessMessage message =
+                new PaymentSuccessMessage();
+
+        // 每次事件生成独立编号
+        message.setEventId(
+                UUID.randomUUID().toString()
+        );
+
+        // 消息中的数据全部来自后端数据库对象
+        message.setPaymentId(
+                paymentOrder.getId()
+        );
+
+        message.setRegistrationOrderId(
+                registrationOrder.getId()
+        );
+
+        message.setPatientId(
+                registrationOrder.getPatientId()
+        );
+
+        message.setPaymentNo(
+                paymentOrder.getPaymentNo()
+        );
+
+        message.setAmount(
+                paymentOrder.getAmount()
+        );
+
+        message.setPaidTime(now);
+
+// 这里只发布Spring内部事件。
+// PaymentSuccessMessageProducer会等事务提交后再发送RabbitMQ。
+        applicationEventPublisher.publishEvent(message);
     }
 
     @Override
@@ -309,4 +355,5 @@ public class PaymentOrderServiceImpl
                 )
                 .update();
     }
+
 }

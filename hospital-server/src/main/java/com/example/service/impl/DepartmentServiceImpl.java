@@ -11,6 +11,9 @@ import com.example.entity.Department;
 import com.example.exception.BusinessException;
 import com.example.mapper.DepartmentMapper;
 import com.example.service.DepartmentService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 
@@ -22,6 +25,13 @@ import org.springframework.stereotype.Service;
  * 这些方法最终都会通过 DepartmentMapper 操作 department 数据库表。
  */
 public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Department> implements DepartmentService {
+
+
+    @CacheEvict(
+            cacheNames = "departmentPages",
+            allEntries = true
+    )
+
 
     // @Override 表示这个 create 方法来自 DepartmentService 接口，这里负责把它真正实现出来。
     @Override
@@ -54,6 +64,10 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         return department.getId();
     }
 
+    @Cacheable(
+            cacheNames = "departmentDetail",
+            key = "#id"
+    )
 
     // 对应 DepartmentService 中的 getDetail，用来查询一条科室详情。
     @Override
@@ -70,6 +84,18 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         return department;
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(
+                            cacheNames = "departmentPages",
+                            allEntries = true
+                    ),
+                    @CacheEvict(
+                            cacheNames = "departmentDetail",
+                            key = "#id"
+                    )
+            }
+    )
 
     // 对应 DepartmentService 中的 update；id 指定修改谁，request 携带新的数据。
     @Override
@@ -107,6 +133,19 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(
+                            cacheNames = "departmentPages",
+                            allEntries = true
+                    ),
+                    @CacheEvict(
+                            cacheNames = "departmentDetail",
+                            key = "#id"
+                    )
+            }
+    )
+
     // 对应 DepartmentService 中的 delete，用来删除指定 id 的科室。
     @Override
     public void delete(Long id) {
@@ -123,6 +162,12 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         removeById(id);
     }
 
+    @Cacheable(
+            cacheNames = "departmentPages",
+            key = "#pageNo + ':' + #pageSize + ':' + " +
+                    "(#keyword == null ? '' : #keyword.trim()) + ':' + " +
+                    "(#status == null ? 'all' : #status)"
+    )
 
     @Override
     public PageResult<Department> pageQuery(
