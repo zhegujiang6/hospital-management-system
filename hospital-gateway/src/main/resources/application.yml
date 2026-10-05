@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: hospital-gateway
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+    gateway:
+      routes:
+
+        # 餐饮服务路由
+        - id: hospital-meal-service
+          uri: lb://hospital-meal-service
+
+          predicates:
+            - Path=/api/meal/**
+
+          filters:
+            - StripPrefix=1
+
+
+        # AI客服服务路由
+        - id: hospital-ai-service
+          uri: http://127.0.0.1:8000
+
+          predicates:
+            - Path=/api/ai/**
+
+          filters:
+            # 删除路径最前面的 /api/ai
+            # /api/ai/conversations 会变成 /conversations
+            - StripPrefix=2
+
+
+        # 登录接口专用路由
+        # 因为它比通用的 /api/** 更具体，所以必须放在通用路由前面
+        - id: hospital-login
+          uri: lb://hospital-server
+
+          predicates:
+            - Path=/api/auth/login
+
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 3
+                redis-rate-limiter.requestedTokens: 1
+
+            - StripPrefix=1
+
+
+        # 医院主服务路由
+        - id: hospital-server
+          uri: lb://hospital-server
+
+          predicates:
+            - Path=/api/**
+
+          filters:
+            - StripPrefix=1
+
+server:
+  port: 9000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: always
