@@ -80,7 +80,11 @@ public class SecurityConfig {
                                         "/patients/**",
                                         "/schedules/**",
                                         "/registrations/**",
-                                        "/payments/**"
+                                        "/payments/**",
+                                        "/wards/**",
+                                        "/beds/**",
+                                        "/inpatient-admissions/**",
+                                        "/patient-accounts/**"
                                 ).hasRole("ADMIN")
 
                                 // 其余所有接口都需要认证后才能访问

@@ -1,7 +1,7 @@
 package com.example.security;
 
 
-import com.example.entity.SysUser;
+import com.example.auth.SysUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +23,10 @@ public class LoginUser implements UserDetails {
 
     public Long getDoctorId() {
         return sysUser.getDoctorId();
+    }
+
+    public Long getPatientId() {
+        return sysUser.getPatientId();
     }
 
     public String getRealName() {

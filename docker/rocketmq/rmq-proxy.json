@@ -1,0 +1,9 @@
+{
+  "rocketMQClusterName": "HospitalMealCluster",
+  "proxyClusterName": "HospitalMealCluster",
+  "localServeAddr": "127.0.0.1",
+  "remotingAccessAddr": "127.0.0.1",
+  "grpcServerPort": 18081,
+  "remotingListenPort": 18080,
+  "useEndpointPortFromRequest": true
+}

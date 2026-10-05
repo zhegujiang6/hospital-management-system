@@ -1,0 +1,66 @@
+name: hospital-rocketmq
+
+services:
+  namesrv:
+    image: apache/rocketmq:5.5.0
+    container_name: hospital-rmq-namesrv
+    command: ["sh", "mqnamesrv"]
+
+    ports:
+      - "127.0.0.1:9876:9876"
+
+    volumes:
+      - hospital_rmq_namesrv_logs:/home/rocketmq/logs
+
+    networks:
+      - hospital-rmq-network
+
+    restart: "no"
+
+  broker:
+    image: apache/rocketmq:5.5.0
+    container_name: hospital-rmq-broker
+
+    depends_on:
+      - namesrv
+
+    command:
+      [
+        "sh",
+        "mqbroker",
+        "-n",
+        "namesrv:9876",
+        "-c",
+        "/home/rocketmq/broker.conf",
+        "--enable-proxy"
+      ]
+
+    environment:
+      NAMESRV_ADDR: "namesrv:9876"
+
+    ports:
+      - "127.0.0.1:10909:10909"
+      - "127.0.0.1:10911:10911"
+      - "127.0.0.1:10912:10912"
+      - "127.0.0.1:18080:18080"
+      - "127.0.0.1:18081:18081"
+
+    volumes:
+      - ./docker/rocketmq/broker.conf:/home/rocketmq/broker.conf:ro
+      - ./docker/rocketmq/rmq-proxy.json:/home/rocketmq/rocketmq-5.5.0/conf/rmq-proxy.json:ro
+      - hospital_rmq_broker_store:/home/rocketmq/store
+      - hospital_rmq_broker_logs:/home/rocketmq/logs
+
+    networks:
+      - hospital-rmq-network
+
+    restart: "no"
+
+networks:
+  hospital-rmq-network:
+    driver: bridge
+
+volumes:
+  hospital_rmq_namesrv_logs:
+  hospital_rmq_broker_store:
+  hospital_rmq_broker_logs:

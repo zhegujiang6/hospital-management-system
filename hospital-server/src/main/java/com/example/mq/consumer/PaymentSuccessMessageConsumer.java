@@ -1,8 +1,8 @@
 package com.example.mq.consumer;
 
 import com.example.config.RabbitMqConfig;
-import com.example.mapper.MqConsumeRecordMapper;
 import com.example.mq.message.PaymentSuccessMessage;
+import com.example.payment.MqConsumeRecordMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

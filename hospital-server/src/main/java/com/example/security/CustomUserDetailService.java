@@ -1,8 +1,8 @@
 package com.example.security;
 
 
-import com.example.entity.SysUser;
-import com.example.mapper.SysUserMapper;
+import com.example.auth.SysUser;
+import com.example.auth.SysUserMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

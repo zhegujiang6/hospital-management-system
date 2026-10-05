@@ -1,0 +1,10 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1786158254296,580,初始化本次测试标识和计数器,200,OK,准备数据：登录、读取排班、创建患者 1-1,text,true,,0,0,1,1,null,0,0,0
+1786158254967,4106,登录管理员并取得 JWT,Non HTTP response code: org.apache.http.conn.HttpHostConnectException,"Non HTTP response message: Connect to localhost:9 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused: connect",准备数据：登录、读取排班、创建患者 1-1,text,false,"登录响应不是有效 JSON：Unable to determine the current character, it is not a string, number, array, or object
+
+The current character read is 'o' with an int value of 111
+Unable to determine the current character, it is not a string, number, array, or object
+line number 1
+index number 0
+org.apache.http.conn.HttpHostConnectException: Connect to localhost:9 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused: connect
+^",2838,0,1,1,http://localhost:9/auth/login,0,0,4106

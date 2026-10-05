@@ -29,6 +29,7 @@ public class JwtUtil {
         this.expirationMillis = expirationMillis;
     }
 
+
     public String generateToken(LoginUser loginUser) {
         Date now = new Date();
 
@@ -46,6 +47,12 @@ public class JwtUtil {
             builder.claim(
                     "doctorId",
                     loginUser.getDoctorId()
+            );
+        }
+        if (loginUser.getPatientId() != null) {
+            builder.claim(
+                    "patientId",
+                    loginUser.getPatientId()
             );
         }
 
