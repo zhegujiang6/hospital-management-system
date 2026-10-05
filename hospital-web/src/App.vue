@@ -2,6 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import DepartmentManagement from '@/components/DepartmentManagement.vue'
+import WardManagement from '@/components/WardManagement.vue'
+import BedManagement from '@/components/BedManagement.vue'
+import InpatientAdmissionManagement from '@/components/InpatientAdmissionManagement.vue'
 import DoctorManagement from '@/components/DoctorManagement.vue'
 import PatientManagement from '@/components/PatientManagement.vue'
 import ScheduleManagement from '@/components/ScheduleManagement.vue'
@@ -9,6 +12,11 @@ import RegistrationManagement from '@/components/RegistrationManagement.vue'
 import AdminVisitRecords from '@/components/AdminVisitRecords.vue'
 import AdminDashboard from '@/components/AdminDashboard.vue'
 import DoctorPortal from '@/components/DoctorPortal.vue'
+import MealManagement from '@/components/MealManagement.vue'
+import MealOrdering from '@/components/MealOrdering.vue'
+import MealOrderHistory from '@/components/MealOrderHistory.vue'
+import MealAiCustomerService from '@/components/MealAiCustomerService.vue'
+import AiCustomerServiceAdmin from '@/components/AiCustomerServiceAdmin.vue'
 import DoctorPendingVisits from '@/components/DoctorPendingVisits.vue'
 import DoctorVisitRecords from '@/components/DoctorVisitRecords.vue'
 import DoctorMySchedules from '@/components/DoctorMySchedules.vue'
@@ -20,10 +28,41 @@ if (!savedUser) clearAuth()
 
 const currentUser = ref(savedUser)
 const isAdmin = computed(() => currentUser.value?.role === 'ADMIN')
-const activeModule = ref(isAdmin.value ? 'overview' : 'doctor-home')
+const isDoctor = computed(() => currentUser.value?.role === 'DOCTOR')
+const isPatient = computed(() => currentUser.value?.role === 'PATIENT')
+
+function getRoleHome(role) {
+  if (role === 'ADMIN') return 'overview'
+  if (role === 'DOCTOR') return 'doctor-home'
+  if (role === 'PATIENT') return 'meal-ordering'
+  return 'unknown-home'
+}
+
+const activeModule = ref(getRoleHome(currentUser.value?.role))
 
 const pageMeta = computed(() => {
-  if (!isAdmin.value) {
+  if (isPatient.value) {
+    if (activeModule.value === 'meal-ai-service') {
+      return {
+        breadcrumb: '医院服务 / 院内餐饮',
+        title: '餐饮智能客服',
+      }
+    }
+
+    if (activeModule.value === 'meal-orders') {
+      return {
+        breadcrumb: '医院服务 / 院内餐饮',
+        title: '我的餐饮订单',
+      }
+    }
+
+    return {
+      breadcrumb: '医院服务 / 院内餐饮',
+      title: '院内点餐',
+    }
+  }
+
+  if (isDoctor.value) {
     if (activeModule.value === 'my-schedules') {
       return {
         breadcrumb: '医院管理 / 医生工作台',
@@ -72,6 +111,41 @@ const pageMeta = computed(() => {
     }
   }
 
+  if (activeModule.value === 'wards') {
+    return {
+      breadcrumb: '医院管理 / 住院服务',
+      title: '病区管理',
+    }
+  }
+
+  if (activeModule.value === 'beds') {
+    return {
+      breadcrumb: '医院管理 / 住院服务',
+      title: '床位管理',
+    }
+  }
+
+  if (activeModule.value === 'inpatient-admissions') {
+    return {
+      breadcrumb: '医院管理 / 住院服务',
+      title: '住院管理',
+    }
+  }
+
+  if (activeModule.value === 'meal-management') {
+    return {
+      breadcrumb: '医院管理 / 院内餐饮',
+      title: '院内餐饮',
+    }
+  }
+
+  if (activeModule.value === 'ai-customer-service') {
+    return {
+      breadcrumb: '医院管理 / 智能客服',
+      title: '人工客服工作台',
+    }
+  }
+
   if (activeModule.value === 'schedules') {
     return {
       breadcrumb: '医院管理 / 诊疗业务',
@@ -99,16 +173,26 @@ const pageMeta = computed(() => {
   }
 })
 
-const roleLabel = computed(() => (isAdmin.value ? '系统管理员' : '医生'))
+const roleLabel = computed(() => {
+  if (isAdmin.value) return '系统管理员'
+  if (isDoctor.value) return '医生'
+  if (isPatient.value) return '患者'
+  return '未知角色'
+})
 
 function handleMenuSelect(index) {
-  const adminModules = ['overview', 'departments', 'doctors', 'patients', 'schedules', 'registrations', 'records']
+  const adminModules = ['overview', 'departments', 'doctors', 'patients', 'wards', 'beds', 'inpatient-admissions', 'meal-management', 'ai-customer-service', 'schedules', 'registrations', 'records']
 
   if (isAdmin.value && adminModules.includes(index)) {
     activeModule.value = index
   } else if (
-    !isAdmin.value &&
+    isDoctor.value &&
     ['doctor-home', 'my-schedules', 'my-registrations', 'my-records'].includes(index)
+  ) {
+    activeModule.value = index
+  } else if (
+    isPatient.value &&
+    ['meal-ordering', 'meal-orders', 'meal-ai-service'].includes(index)
   ) {
     activeModule.value = index
   }
@@ -116,7 +200,7 @@ function handleMenuSelect(index) {
 
 function handleLoginSuccess(user) {
   currentUser.value = user
-  activeModule.value = user.role === 'ADMIN' ? 'overview' : 'doctor-home'
+  activeModule.value = getRoleHome(user.role)
 }
 
 async function handleLogout() {
@@ -157,7 +241,7 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
         <div class="brand-mark">十</div>
         <div>
           <strong>安和医院</strong>
-          <span>门诊管理系统</span>
+          <span>医院综合服务平台</span>
         </div>
       </div>
 
@@ -185,6 +269,32 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
             <span>患者管理</span>
           </el-menu-item>
 
+          <div class="menu-caption menu-caption-inner">住院服务</div>
+          <el-menu-item index="wards">
+            <span class="menu-symbol">▥</span>
+            <span>病区管理</span>
+          </el-menu-item>
+          <el-menu-item index="beds">
+            <span class="menu-symbol">▰</span>
+            <span>床位管理</span>
+          </el-menu-item>
+          <el-menu-item index="inpatient-admissions">
+            <span class="menu-symbol">▣</span>
+            <span>住院管理</span>
+          </el-menu-item>
+
+          <div class="menu-caption menu-caption-inner">院内餐饮</div>
+          <el-menu-item index="meal-management">
+            <span class="menu-symbol">餐</span>
+            <span>院内餐饮</span>
+          </el-menu-item>
+
+          <div class="menu-caption menu-caption-inner">智能客服</div>
+          <el-menu-item index="ai-customer-service">
+            <span class="menu-symbol">客</span>
+            <span>人工客服工作台</span>
+          </el-menu-item>
+
           <div class="menu-caption menu-caption-inner">诊疗业务</div>
           <el-menu-item index="schedules">
             <span class="menu-symbol">▦</span>
@@ -198,10 +308,11 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
             <span class="menu-symbol">▤</span>
             <span>就诊记录</span>
           </el-menu-item>
+
         </el-menu>
       </template>
 
-      <template v-else>
+      <template v-else-if="isDoctor">
         <div class="menu-caption">医生工作台</div>
         <el-menu
           class="side-menu"
@@ -223,6 +334,24 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
           <el-menu-item index="my-records">
             <span class="menu-symbol">▤</span>
             <span>就诊记录</span>
+          </el-menu-item>
+        </el-menu>
+      </template>
+
+      <template v-else-if="isPatient">
+        <div class="menu-caption">患者服务中心</div>
+        <el-menu class="side-menu" :default-active="activeModule" @select="handleMenuSelect">
+          <el-menu-item index="meal-ordering">
+            <span class="menu-symbol">餐</span>
+            <span>院内点餐</span>
+          </el-menu-item>
+          <el-menu-item index="meal-orders">
+            <span class="menu-symbol">单</span>
+            <span>我的订单</span>
+          </el-menu-item>
+          <el-menu-item index="meal-ai-service">
+            <span class="menu-symbol">AI</span>
+            <span>餐饮客服</span>
           </el-menu-item>
         </el-menu>
       </template>
@@ -257,13 +386,18 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
           @navigate="handleMenuSelect"
         />
         <DepartmentManagement v-else-if="activeModule === 'departments'" />
+        <WardManagement v-else-if="activeModule === 'wards'" />
+        <BedManagement v-else-if="activeModule === 'beds'" />
+        <InpatientAdmissionManagement v-else-if="activeModule === 'inpatient-admissions'" />
         <DoctorManagement v-else-if="activeModule === 'doctors'" />
         <PatientManagement v-else-if="activeModule === 'patients'" />
         <ScheduleManagement v-else-if="activeModule === 'schedules'" />
         <RegistrationManagement v-else-if="activeModule === 'registrations'" />
         <AdminVisitRecords v-else-if="activeModule === 'records'" />
+        <MealManagement v-else-if="activeModule === 'meal-management'" />
+        <AiCustomerServiceAdmin v-else-if="activeModule === 'ai-customer-service'" />
       </template>
-      <template v-else>
+      <template v-else-if="isDoctor">
         <DoctorPortal
           v-if="activeModule === 'doctor-home'"
           :user="currentUser"
@@ -277,6 +411,15 @@ onBeforeUnmount(() => window.removeEventListener('auth-expired', handleAuthExpir
         <DoctorVisitRecords
           v-else-if="activeModule === 'my-records'"
         />
+      </template>
+      <template v-else-if="isPatient">
+        <MealOrdering
+          v-if="activeModule === 'meal-ordering'"
+          :user="currentUser"
+          @navigate-orders="handleMenuSelect('meal-orders')"
+        />
+        <MealOrderHistory v-else-if="activeModule === 'meal-orders'" />
+        <MealAiCustomerService v-else-if="activeModule === 'meal-ai-service'" />
       </template>
     </main>
   </div>

@@ -101,8 +101,21 @@ textarea {
 
 .side-menu {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 8px;
   border-right: 0 !important;
   background: transparent !important;
+}
+
+.side-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.side-menu::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(143, 164, 200, 0.28);
 }
 
 .side-menu .el-menu-item {
